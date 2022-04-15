@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Quemar DLYCOP</title>
+		<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+	</head>
+	<body>
+		<div>
+			<p>Dirección de tu wallet: <span id="wallet-address"></span></p>
+			<p>Saldo en tu wallet: <span id="dlycop-balance"></span></p>
+			<br/>
+			<p>Indica a continuación cuántos DLYCOP quieres quemar</p>
+
+			<input id="burnDLYCOPAmount" type="number">
+			<button id="burnButton">Quemar DLYCOP</button>
+		</div>
+		<script type="text/javascript">
+			//1. Connect metamask to our site. Get the user's address
+			var account = null;
+			var contract = null;
+			var amountToBurn = 0;
+			const ABI = [ { "constant": true, "inputs": [], "name": "name", "outputs": [ { "name": "", "type": "string" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "totalSupply", "outputs": [ { "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "decimals", "outputs": [ { "name": "", "type": "uint8" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [ { "name": "_owner", "type": "address" } ], "name": "balanceOf", "outputs": [ { "name": "balance", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "symbol", "outputs": [ { "name": "", "type": "string" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transfer", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "_owner", "type": "address" }, { "name": "_spender", "type": "address" } ], "name": "allowance", "outputs": [ { "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "payable": true, "stateMutability": "payable", "type": "fallback" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "owner", "type": "address" }, { "indexed": true, "name": "spender", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Approval", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": true, "name": "to", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" },	{ "constant": false, "inputs": [ { "name": "amount", "type": "uint256" }], "name": "burn", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function"}	];
+			const ADDRESS = "0x1659fFb2d40DfB1671Ac226A0D9Dcc95A774521A";
+
+
+
+			(async() => {
+				if(window.ethereum) {
+					// Get wallet address
+					await window.ethereum.send('eth_requestAccounts');
+					window.web3 = new Web3(window.ethereum);
+
+					var accounts = await web3.eth.getAccounts();
+					account = accounts[0];
+					document.getElementById('wallet-address').textContent = account;
+			
+
+					// Get DLYCOP balance
+					contract = new web3.eth.Contract(ABI, ADDRESS);
+					if(contract){
+						contract.methods.balanceOf(account).call().then((value) => {
+						    document.getElementById('dlycop-balance').textContent = web3.utils.fromWei(value, "ether") + " DLYCOP";
+			              }).catch((error) => {
+						    document.getElementById('dlycop-balance').textContent = "Error";
+
+			              });
+					}
+
+					document.getElementById('burnButton').onclick = () => {
+						burnDLYCOP();	
+					}
+
+				
+				}
+
+			})();
+
+			//2. Interact with the contract
+			const burnDLYCOP = async () => {
+				if(contract){
+					amountToBurn = document.getElementById('burnDLYCOPAmount').value;
+					var amountToBurnParsed = web3.utils.toBN(String(amountToBurn) + "0".repeat(18));
+					//var transaction = await contract.methods.burn(amountToBurn).send({ from : account});
+					//window.location.reload();
+					
+
+					var transaction = await contract.methods.burn(amountToBurnParsed).send({ from : account}, function(error, transactionHash){
+
+					});
+
+				}
+
+			}
+		</script>
+	</body>
+
+</html>
